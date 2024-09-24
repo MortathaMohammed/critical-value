@@ -1,0 +1,314 @@
+frappe.ui.form.on("Lab Test", {
+    before_save: async function(frm) {
+        try {
+            console.log(frm);
+            let data = frm.doc.normal_test_items || [];
+
+            let criticalFound = false;
+            let abnormalFound = false;
+            let normalFound = false;
+
+            for (let i = 0; i < data.length; i++) {
+                let item = data[i];
+
+                let lab_temp = await getTemplateData(item.template);
+                if (!lab_temp) {
+                    frappe.msgprint(`Template data not found for item ${item.template}.`);
+                    continue;
+                }
+                if (lab_temp.lab_test_template_type === "Compound" || lab_temp.lab_test_template_type === "Single") {
+                    let final_result = getFinalResult(item.result_value, item.normal_range, item.critical_value, frm);
+
+                    if (final_result) {
+                        item.final_result = getFinalResultBadge(final_result);
+                    } else {
+                        item.final_result = "";
+                    }
+
+                    item.result_status = final_result;
+
+                    if (final_result === 'Critical') {
+                        criticalFound = true;
+                    } else if (final_result === 'Abnormal') {
+                        abnormalFound = true;
+                    } else if (final_result === 'Normal') {
+                        normalFound = true;
+                    }
+
+                } else {
+                    console.log("Not Found!");
+                }
+            }
+
+            if (criticalFound) {
+                frm.set_value('result_status', 'Critical'); 
+                frappe.model.set_value(item.doctype, item.name, 'result_status', 'Critical'); 
+            } else if (abnormalFound) {
+                frm.set_value('result_status', 'Abnormal');
+                frappe.model.set_value(item.doctype, item.name, 'result_status', 'Abnormal');
+            } else if (normalFound) {
+                frm.set_value('result_status', 'Normal');
+                frappe.model.set_value(item.doctype, item.name, 'result_status', 'Normal');
+            } else {
+                frm.set_value('result_status', '');
+                frappe.model.set_value(item.doctype, item.name, 'result_status', ''); 
+            }
+
+
+            frm.refresh_field('normal_test_items');
+            frm.refresh_field('result_status');
+
+        } catch (error) {
+            console.log("Error fetching Lab Test Template: " + error.message);
+        }
+    }
+});
+
+
+function getFinalResult(result_value, normal_range, critical_value, frm) {
+    if (typeof result_value !== 'string' || result_value.trim() === "") {
+        return;
+    } else {
+        result_value = Number(result_value);
+        if (isNaN(result_value)) {
+            return;
+        }
+    }
+
+    if (typeof normal_range !== 'string' || normal_range.trim() === "") {
+        return;
+    } else {
+        var normal_ranges = getNormalRangesFromString(normal_range);
+        if (!Array.isArray(normal_ranges) || normal_ranges.length === 0) {
+            return;
+        }
+    }
+
+    if (typeof critical_value !== 'string' || critical_value.trim() === "") {
+        return;
+    } else {
+        let criticalValuesArray = critical_value
+            .replace(/[<>]/g, '')
+            .split('or')
+            .map(str => str.trim())
+            .map(Number);
+
+        if (criticalValuesArray.length !== 2 || criticalValuesArray.some(isNaN)) {
+            return;
+        } else {
+            var [critical_min, critical_max] = criticalValuesArray;
+        }
+    }
+
+    let age = getAgeInYears(frm.doc.patient_age, frm);
+    if (age === "" || age === null || age === undefined || isNaN(age)) {
+        return;
+    }
+
+    let gender = normalizeGender(frm.doc.patient_sex);
+    if (typeof gender !== 'string' || gender.trim() === "") {
+        return;
+    }
+
+    for (let normal of normal_ranges) {
+        if (
+            typeof normal.normal_range !== 'string' || normal.normal_range.trim() === "" ||
+            typeof normal.gender !== 'string' || normal.gender.trim() === "" ||
+            typeof normal.age !== 'string' || normal.age.trim() === ""
+        ) {
+            continue;
+        }
+
+        if (normal.normal_range.includes('-')) {
+            let normalRangeValues = normal.normal_range.split('-').map(Number);
+            if (normalRangeValues.length !== 2 || normalRangeValues.some(isNaN)) {
+                continue;
+            }
+            let [normal_min, normal_max] = normalRangeValues;
+
+            if (normal.age !== 'all') {
+                if (normal.age.includes('-')) {
+                    let ageRange = normal.age.split('-').map(Number);
+                    if (ageRange.length !== 2 || ageRange.some(isNaN)) {
+                        continue;
+                    }
+                    let [age_min, age_max] = ageRange;
+
+                    if (age >= age_min && age <= age_max && gender === normal.gender) {
+                        if (result_value >= normal_min && result_value <= normal_max) {
+                            return "Normal";
+                        } else if (
+                            (result_value > critical_min && result_value < normal_min) ||
+                            (result_value > normal_max && result_value < critical_max)
+                        ) {
+                            return "Abnormal";
+                        } else {
+                            return "Critical";
+                        }
+                    }
+                } else {
+                    continue;
+                }
+            } else {
+                if (gender === normal.gender) {
+                    if (result_value >= normal_min && result_value <= normal_max) {
+                        return "Normal";
+                    } else if (
+                        (result_value > critical_min && result_value < normal_min) ||
+                        (result_value > normal_max && result_value < critical_max)
+                    ) {
+                        return "Abnormal";
+                    } else {
+                        return "Critical";
+                    }
+                }
+            }
+        } else {
+            continue;
+        }
+    }
+
+    return;
+}
+
+
+function getNormalRangesFromString(normal_ranges_string) {
+    let normal_ranges = [];
+    let lines = normal_ranges_string.split('\n');
+    for (let line of lines) {
+        line = line.trim();
+        if (!line) continue;
+        let parts = line.split(':');
+        if (parts.length < 3) {
+            console.log("Invalid normal range format:", line);
+            continue;
+        }
+        let gender = parts[0].trim();
+        let age = parts[1].trim();
+        let normal_range = parts[2].trim();
+
+        gender = normalizeGender(gender);
+
+        normal_ranges.push({
+            gender: gender,
+            age: age,
+            normal_range: normal_range
+        });
+    }
+    return normal_ranges;
+}
+
+function getCriticalValuesFromString(critical_value_string) {
+    let critical_values = [];
+    let critical_entries = critical_value_string.split('\n').map(line => line.trim()).filter(line => line);
+
+    for (let entry of critical_entries) {
+        let parts = entry.split(':');
+        if (parts.length < 3) {
+            console.log("Invalid critical value format:", entry);
+            continue;
+        }
+
+        let gender = parts[0].trim();
+        let age_range = parts[1].trim();
+        let critical_conditions = parts.slice(2).join(':').trim();
+        
+        gender = normalizeGender(gender);
+
+        critical_values.push({
+            gender: gender,
+            age_range: age_range,
+            conditions: critical_conditions 
+        });
+    }
+
+    return critical_values;
+}
+
+
+function getFinalResultBadge(final_result) {
+    let badgeClass = '';
+    if (final_result === 'Normal') {
+        badgeClass = 'badge badge-success';  
+    } else if (final_result === 'Abnormal') {
+        badgeClass = 'badge badge-warning';  
+    } else if (final_result === 'Critical') {
+        badgeClass = 'badge badge-danger'; 
+    } else {
+        badgeClass = 'badge badge-secondary';
+    }
+    return `<span class="${badgeClass}" style="font-weight: bold; padding: 5px 10px; border-radius: 5px; font-size: 13px; text-align: center; display: inline-block; width: 100%;">${final_result}</span>`;    
+}
+
+function normalizeGender(gender) {
+    if (!gender) return '';
+    gender = gender.trim().toLowerCase();
+    if (gender === 'm' || gender === 'male') {
+        return 'm';
+    } else if (gender === 'f' || gender === 'female') {
+        return 'f';
+    } else if (gender === 'all') {
+        return 'all';
+    } else {
+        return gender;
+    }
+}
+
+function getAgeInYears(ageString, frm) {
+    if (typeof ageString !== 'string') {
+        if (!frm.ageErrorShown) {
+            frappe.msgprint("Age string is not a valid string.");
+        }
+        return NaN;
+    }
+
+    let years = 0, months = 0, days = 0;
+
+    let yearsMatch = ageString.match(/(\d+)\s*Years?\(s\)/i);
+    let monthsMatch = ageString.match(/(\d+)\s*Months?\(s\)/i);
+    let daysMatch = ageString.match(/(\d+)\s*Days?\(s\)/i);
+
+    if (yearsMatch) years = parseInt(yearsMatch[1]);
+    if (monthsMatch) months = parseInt(monthsMatch[1]);
+    if (daysMatch) days = parseInt(daysMatch[1]);
+
+    if (isNaN(years)) years = 0;
+    if (isNaN(months)) months = 0;
+    if (isNaN(days)) days = 0;
+
+    if (years === 0 && months === 0 && days === 0) {
+        if (!frm.ageErrorShown) {
+            frappe.msgprint("Patient age could not be parsed.");
+            frm.ageErrorShown = true;
+        }
+        return NaN;
+    }
+
+    let totalYears = years + (months / 12) + (days / 365);
+    totalYears = parseFloat(totalYears.toFixed(2));
+    return totalYears;
+}
+
+async function getTemplateData(template) {
+    return new Promise((resolve, reject) => {
+        frappe.call({
+            method: "frappe.client.get",
+            args: {
+                doctype: "Lab Test Template",
+                name: template
+            },
+            callback: function(r) {
+                if (r.message) {
+                    resolve(r.message);
+                } else {
+                    reject(new Error("No data found for template: " + template));
+                }
+            },
+            error: function(error) {
+                reject(error);
+            }
+        });
+    });
+}
+
+
