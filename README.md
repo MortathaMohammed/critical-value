@@ -73,7 +73,7 @@ I added a field named `lab_test_critical_value` in the **Lab Test Template**.
 
 **Screenshot**:
 
-![Lab Test Template Critical Value Field](file-Lia9gsHVYIuWqOd6RQIiFa2J.png)
+![Lab Test Template Critical Value Field]([file-Lia9gsHVYIuWqOd6RQIiFa2J.png](https://github.com/user-attachments/assets/1c00cc4a-cdbf-498f-91ee-23639b7e57d8))
 
 ### 2. **Normal Test Template Field**
 
@@ -85,13 +85,14 @@ In the **Normal Test Template**, a similar field for critical values is added.
 
 **Screenshot**:
 
-![Normal Test Template Critical Value Field](file-Dw9nJay5yA05XXFRsWnlr18c.png)
+![Normal Test Template Critical Value Field](https://github.com/user-attachments/assets/a7e5c3c6-fc03-4a87-bb67-48dbaa801b71)
 
 ---
 
 ## Notification for Critical Values
 
-To notify healthcare professionals when a critical value is detected, I configured a system notification in the **Lab Test** Doctype. The condition is based on the `result_status` field.
+To notify healthcare professionals when a critical!
+ value is detected, I configured a system notification in the **Lab Test** Doctype. The condition is based on the `result_status` field.
 
 ### Notification Setup:
 - **Document Type**: Lab Test
@@ -102,7 +103,9 @@ This condition checks whether the result status is either "Critical" or "Abnorma
 
 **Screenshot**:
 
-![Notification Setup for Critical Values](file-Mui7pJ8gMzYRDk3yjxyjKbH6.png)
+![Notification Setup for Critical Values](https://github.com/user-attachments/assets/f71df9ec-bc4c-463b-bc0d-0b3b286cb33e)
+
+![Notification Setup](https://github.com/user-attachments/assets/53a3988d-b6fe-47fe-bc44-ce7cb7532835)
 
 ---
 
@@ -111,7 +114,3 @@ This condition checks whether the result status is either "Critical" or "Abnorma
 This implementation ensures that healthcare professionals are immediately notified if a lab test returns a **Critical Value**, helping to ensure timely intervention. By adding the **Critical Value** field to the backend and frontend components, the system can automatically detect and flag abnormal or critical results.
 
 Feel free to contribute by creating a pull request or providing suggestions for improvement.
-
----
-
-Let me know if you need further adjustments or enhancements to the report!
