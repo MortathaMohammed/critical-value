@@ -1,5 +1,5 @@
 frappe.ui.form.on("Lab Test", {
-    before_save: async function(frm) {
+    before_save: async function (frm) {
         try {
             console.log(frm);
             let data = frm.doc.normal_test_items || [];
@@ -41,8 +41,8 @@ frappe.ui.form.on("Lab Test", {
             }
 
             if (criticalFound) {
-                frm.set_value('result_status', 'Critical'); 
-                frappe.model.set_value(item.doctype, item.name, 'result_status', 'Critical'); 
+                frm.set_value('result_status', 'Critical');
+                frappe.model.set_value(item.doctype, item.name, 'result_status', 'Critical');
             } else if (abnormalFound) {
                 frm.set_value('result_status', 'Abnormal');
                 frappe.model.set_value(item.doctype, item.name, 'result_status', 'Abnormal');
@@ -51,7 +51,7 @@ frappe.ui.form.on("Lab Test", {
                 frappe.model.set_value(item.doctype, item.name, 'result_status', 'Normal');
             } else {
                 frm.set_value('result_status', '');
-                frappe.model.set_value(item.doctype, item.name, 'result_status', ''); 
+                frappe.model.set_value(item.doctype, item.name, 'result_status', '');
             }
 
 
@@ -212,13 +212,13 @@ function getCriticalValuesFromString(critical_value_string) {
         let gender = parts[0].trim();
         let age_range = parts[1].trim();
         let critical_conditions = parts.slice(2).join(':').trim();
-        
+
         gender = normalizeGender(gender);
 
         critical_values.push({
             gender: gender,
             age_range: age_range,
-            conditions: critical_conditions 
+            conditions: critical_conditions
         });
     }
 
@@ -229,15 +229,15 @@ function getCriticalValuesFromString(critical_value_string) {
 function getFinalResultBadge(final_result) {
     let badgeClass = '';
     if (final_result === 'Normal') {
-        badgeClass = 'badge badge-success';  
+        badgeClass = 'badge badge-success';
     } else if (final_result === 'Abnormal') {
-        badgeClass = 'badge badge-warning';  
+        badgeClass = 'badge badge-warning';
     } else if (final_result === 'Critical') {
-        badgeClass = 'badge badge-danger'; 
+        badgeClass = 'badge badge-danger';
     } else {
         badgeClass = 'badge badge-secondary';
     }
-    return `<span class="${badgeClass}" style="font-weight: bold; padding: 5px 10px; border-radius: 5px; font-size: 13px; text-align: center; display: inline-block; width: 100%;">${final_result}</span>`;    
+    return `<span class="${badgeClass}" style="font-weight: bold; padding: 5px 10px; border-radius: 5px; font-size: 13px; text-align: center; display: inline-block; width: 100%;">${final_result}</span>`;
 }
 
 function normalizeGender(gender) {
@@ -297,14 +297,14 @@ async function getTemplateData(template) {
                 doctype: "Lab Test Template",
                 name: template
             },
-            callback: function(r) {
+            callback: function (r) {
                 if (r.message) {
                     resolve(r.message);
                 } else {
                     reject(new Error("No data found for template: " + template));
                 }
             },
-            error: function(error) {
+            error: function (error) {
                 reject(error);
             }
         });
