@@ -73,7 +73,7 @@ I added a field named `lab_test_critical_value` in the **Lab Test Template**.
 
 **Screenshot**:
 
-![Lab Test Template Critical Value Field]([file-Lia9gsHVYIuWqOd6RQIiFa2J.png](https://github.com/user-attachments/assets/1c00cc4a-cdbf-498f-91ee-23639b7e57d8))
+![Lab Test Template Critical Value Field](https://github.com/user-attachments/assets/1c00cc4a-cdbf-498f-91ee-23639b7e57d8)
 
 ### 2. **Normal Test Template Field**
 
