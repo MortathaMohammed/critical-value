@@ -1,7 +1,3 @@
-Here is a sample report to publish in your GitHub repository, explaining the **Critical Value** implementation in the Frappe framework. This report covers both backend and frontend changes, along with instructions and code.
-
----
-
 # Critical Value Implementation in Frappe Framework
 
 ## Overview
