@@ -85,7 +85,7 @@ In the **Normal Test Template**, a similar field for critical values is added.
 
 ---
 
-Result Status Field
+### 3. **Result Status Field**
 
 To track the status of the lab test results as Normal, Abnormal, or Critical, I added a new field called result_status in the Lab Test DocType.
 Result Status Field Setup:
