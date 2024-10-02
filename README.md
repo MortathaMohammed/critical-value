@@ -1,7 +1,3 @@
-Here is a sample report to publish in your GitHub repository, explaining the **Critical Value** implementation in the Frappe framework. This report covers both backend and frontend changes, along with instructions and code.
-
----
-
 # Critical Value Implementation in Frappe Framework
 
 ## Overview
@@ -86,6 +82,22 @@ In the **Normal Test Template**, a similar field for critical values is added.
 **Screenshot**:
 
 ![Normal Test Template Critical Value Field](https://github.com/user-attachments/assets/a7e5c3c6-fc03-4a87-bb67-48dbaa801b71)
+
+---
+
+### 3. **Result Status Field**
+
+To track the status of the lab test results as Normal, Abnormal, or Critical, I added a new field called result_status in the Lab Test DocType.
+Result Status Field Setup:
+
+    Field Name: result_status
+    Label: Result Status
+    Type: Data
+
+This field allows the system to capture and store the status of the test based on the result compared to the normal and critical ranges.
+
+Screenshot:
+![](https://github.com/user-attachments/assets/b52d9fd5-e956-4fa6-93a7-bad73dd7a722)
 
 ---
 
